@@ -17,37 +17,15 @@ interface Marker {
 })
 export class Tab1Page implements OnInit {
 
-  map = null;
-  markers: Marker[] = [
-    {
-      position: {
-        lat: 9.869510,
-        lng: -84.056755,
-      },
-      title: 'House Michelle'
-    },
-    {
-      position: {
-        lat: 9.872985,
-        lng: -84.062730,
-      },
-      title: 'Liceo San Miguel'
-    },
-    {
-      position: {
-        lat: 9.870184,
-        lng: -84.061485,
-      },
-      title: 'Urbanizacion La Capri'
-    },
-    {
-      position: {
-        lat: 9.872034,
-        lng: -84.066796,
-      },
-      title: 'Centro Cívico Para Paz La Capri'
-    }
-  ];
+  map: any;
+  // calculate the distance of the route
+  directionsService = new google.maps.DirectionsService();
+  // write the route in the map
+  directionsDisplay = new google.maps.DirectionsRenderer();
+  // El Cruce
+  origin = { lat: 9.885100, lng: -84.065531 };
+  // Chepe
+  destination = { lat: 9.913127, lng: -84.068912 }
 
   constructor() {}
 
@@ -58,31 +36,35 @@ export class Tab1Page implements OnInit {
   loadMap() {
     // create a new map by passing HTMLElement
     const mapEle: HTMLElement = document.getElementById('map');
+    const indicatorsEle: HTMLElement = document.getElementById('indicators');
     // create LatLng object
     const myLatLng = {lat: 9.868220, lng: -84.064802};
     // create map
     this.map = new google.maps.Map(mapEle, {
-      center: myLatLng,
+      center: this.origin,
       zoom: 12
     });
 
+    this.directionsDisplay.setMap(this.map);
+    this.directionsDisplay.setPanel(indicatorsEle);
+
     google.maps.event.addListenerOnce(this.map, 'idle', () => {
       mapEle.classList.add('show-map');
-      this.renderMarkers();
+      this.calculateRoute();
     });
   }
 
-  renderMarkers() {
-    this.markers.forEach(marker => {
-      this.addMarker(marker);
+  private calculateRoute() {
+    this.directionsService.route({
+      origin: this.origin,
+      destination: this.destination,
+      travelMode: google.maps.TravelMode.DRIVING,
+    }, (response, status)  => {
+      if (status === google.maps.DirectionsStatus.OK) {
+        this.directionsDisplay.setDirections(response);
+      } else {
+        alert('Could not display directions due to: ' + status);
+      }
     });
-  }
-
-  addMarker(marker: Marker) {
-    return new google.maps.Marker({
-      position: marker.position,
-      map: this.map,
-      title: marker.title
-    });
-  }
+    }
 }
